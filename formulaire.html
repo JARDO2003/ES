@@ -110,24 +110,15 @@
             margin-bottom: 20px;
         }
         #countdown {
-            font-size: 32px;
+            font-size: 100px;
             font-weight: bold;
             color: #3498db;
-            margin: 20px 0;
-            display: none;
-        }
-        .countdown-container {
             text-align: center;
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: #f0f3f6;
             display: none;
-        }
-        .countdown-text {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #2c3e50;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
@@ -184,10 +175,7 @@
         </form>
     </div>
 
-    <div id="countdownContainer" class="countdown-container">
-        <div class="countdown-text">Traitement en cours...</div>
-        <div id="countdown">5</div>
-    </div>
+    <div id="countdown">5</div>
 
     <div id="thankYouContainer" class="thank-you-container">
         <div class="thank-you-icon">✓</div>
@@ -264,7 +252,6 @@
         const form = document.getElementById('fournisseurForm');
         const messageDiv = document.getElementById('message');
         const formContainer = document.getElementById('formContainer');
-        const countdownContainer = document.getElementById('countdownContainer');
         const countdownElement = document.getElementById('countdown');
         const thankYouContainer = document.getElementById('thankYouContainer');
         
@@ -287,10 +274,10 @@
             }
             
             try {
-                // Show countdown instead of loading message
+                // Hide form and show countdown
                 messageDiv.style.display = "none";
                 formContainer.style.display = 'none';
-                countdownContainer.style.display = 'block';
+                countdownElement.style.display = 'block';
                 
                 // Start countdown from 5 to 0
                 let countdown = 5;
@@ -302,6 +289,7 @@
                     
                     if (countdown <= 0) {
                         clearInterval(countdownInterval);
+                        countdownElement.style.display = 'none';
                         
                         // Process form data after countdown
                         await processFormData();
@@ -311,7 +299,7 @@
             } catch (error) {
                 console.error("Erreur lors de l'inscription:", error);
                 formContainer.style.display = 'block';
-                countdownContainer.style.display = 'none';
+                countdownElement.style.display = 'none';
                 showMessage("Une erreur s'est produite. Veuillez réessayer.", "error");
             }
         });
@@ -353,14 +341,13 @@
                 
                 await set(ref(database, `fournisseurs/${fournisseurId}`), fournisseurData);
                 
-                // Hide countdown and show thank you message
-                countdownContainer.style.display = 'none';
+                // Show thank you message
                 thankYouContainer.style.display = 'block';
                 
             } catch (error) {
                 console.error("Erreur lors de l'inscription:", error);
                 formContainer.style.display = 'block';
-                countdownContainer.style.display = 'none';
+                countdownElement.style.display = 'none';
                 showMessage("Une erreur s'est produite. Veuillez réessayer.", "error");
             }
         }
