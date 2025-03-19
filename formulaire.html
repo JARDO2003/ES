@@ -119,6 +119,25 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            z-index: 100;
+        }
+        #waitingMessage {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: center;
+            display: none;
+            position: fixed;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            width: 80%;
+            max-width: 500px;
         }
     </style>
 </head>
@@ -176,6 +195,7 @@
     </div>
 
     <div id="countdown">5</div>
+    <div id="waitingMessage">Patientez, veuillez ne pas sortir de cette page...</div>
 
     <div id="thankYouContainer" class="thank-you-container">
         <div class="thank-you-icon">✓</div>
@@ -253,7 +273,14 @@
         const messageDiv = document.getElementById('message');
         const formContainer = document.getElementById('formContainer');
         const countdownElement = document.getElementById('countdown');
+        const waitingMessageElement = document.getElementById('waitingMessage');
         const thankYouContainer = document.getElementById('thankYouContainer');
+        
+        const waitingMessages = [
+            "Patientez, veuillez ne pas sortir de cette page...",
+            "Envoi des données en cours, merci de patienter...",
+            "Téléchargement des photos, ne fermez pas cette page..."
+        ];
         
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -283,7 +310,7 @@
                 let countdown = 5;
                 countdownElement.textContent = countdown;
                 
-                const countdownInterval = setInterval(async () => {
+                const countdownInterval = setInterval(() => {
                     countdown--;
                     countdownElement.textContent = countdown;
                     
@@ -291,8 +318,11 @@
                         clearInterval(countdownInterval);
                         countdownElement.style.display = 'none';
                         
+                        // Show waiting messages
+                        showWaitingMessages();
+                        
                         // Process form data after countdown
-                        await processFormData();
+                        processFormData();
                     }
                 }, 1000);
                 
@@ -300,9 +330,25 @@
                 console.error("Erreur lors de l'inscription:", error);
                 formContainer.style.display = 'block';
                 countdownElement.style.display = 'none';
+                waitingMessageElement.style.display = 'none';
                 showMessage("Une erreur s'est produite. Veuillez réessayer.", "error");
             }
         });
+        
+        function showWaitingMessages() {
+            let messageIndex = 0;
+            waitingMessageElement.textContent = waitingMessages[messageIndex];
+            waitingMessageElement.style.display = 'block';
+            
+            // Change message every 2 seconds
+            const messageInterval = setInterval(() => {
+                messageIndex = (messageIndex + 1) % waitingMessages.length;
+                waitingMessageElement.textContent = waitingMessages[messageIndex];
+            }, 2000);
+            
+            // Store interval ID on the window to clear it later
+            window.messageIntervalId = messageInterval;
+        }
         
         async function processFormData() {
             try {
@@ -341,13 +387,25 @@
                 
                 await set(ref(database, `fournisseurs/${fournisseurId}`), fournisseurData);
                 
+                // Clear message interval and hide waiting message
+                if (window.messageIntervalId) {
+                    clearInterval(window.messageIntervalId);
+                }
+                waitingMessageElement.style.display = 'none';
+                
                 // Show thank you message
                 thankYouContainer.style.display = 'block';
                 
             } catch (error) {
                 console.error("Erreur lors de l'inscription:", error);
+                
+                // Clear message interval and hide waiting message
+                if (window.messageIntervalId) {
+                    clearInterval(window.messageIntervalId);
+                }
+                waitingMessageElement.style.display = 'none';
+                
                 formContainer.style.display = 'block';
-                countdownElement.style.display = 'none';
                 showMessage("Une erreur s'est produite. Veuillez réessayer.", "error");
             }
         }
